@@ -1,0 +1,126 @@
+name: NuGet Publish
+
+# Variables
+on:
+  workflow_call:
+    inputs:
+      dotnet_version:
+        required: false
+        type: string
+        default: '9.0.x'
+      project_name:
+        type: string
+        required: true
+      project_path:
+        required: false
+        type: string
+        default: './'
+      run_test:
+        required: false
+        type: boolean
+        default: true
+    secrets:
+      NUGET_APIKEY:
+        required: true
+      DISCORD_WEBHOOK:
+        required: true
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: true
+  NuGetDirectory: ${{ github.workspace}}/nuget
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+
+  # Create the NuGet package
+  create_nuget:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0 # Get all history to allow automatic versioning using MinVer
+
+    # Install .NET 9.0 SDK
+    - name: Setup .NET ${{ inputs.dotnet_version }}
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ inputs.dotnet_version }} # Use a specific version or '9.0.x' for the latest 9.0 preview
+
+    # Build the NuGet package in the folder from the environment variable NuGetDirectory
+    - name: Build
+      run: dotnet build ${{ inputs.project_path }} --configuration Release
+      
+    # Create the NuGet package in the folder from the environment variable NuGetDirectory
+    - name: Pack
+      run: dotnet pack ${{ inputs.project_path }} --configuration Release --output ${{ env.NuGetDirectory }}
+
+    # Publish the NuGet package as an artifact, so they can be used in the following jobs
+    - uses: actions/upload-artifact@v4
+      with:
+        name: nuget
+        if-no-files-found: error
+        retention-days: 7
+        path: ${{ env.NuGetDirectory }}/*.nupkg
+
+  # Run Tests if needed
+  call_run_test:
+    uses: SkJonko/Centralized-Workflow-YAMLs/.github/workflows/helpers/run-test.yaml@main
+    with:
+      run_test: ${{ inputs.run_test }}
+
+
+  # Validate the NuGet package
+  validate_nuget:
+     runs-on: ubuntu-latest
+     needs: [ create_nuget, call_run_test ]
+     steps:
+    
+       # Install .NET ${{ inputs.dotnet_version }}
+       - name: Setup .NET ${{ inputs.dotnet_version }}
+         uses: actions/setup-dotnet@v4
+         with:
+           dotnet-version: ${{ inputs.dotnet_version }} # Use a specific version or '9.0.x' for the latest 9.0 preview
+
+       # Download the NuGet package created in the previous job
+       - uses: actions/download-artifact@v4
+         with:
+           name: nuget
+           path: ${{ env.NuGetDirectory }}
+
+       - name: Install nuget validator
+         run: dotnet tool update Meziantou.Framework.NuGetPackageValidation.Tool --global
+
+       # Validate metadata and content of the NuGet package
+       # https://www.nuget.org/packages/Meziantou.Framework.NuGetPackageValidation.Tool#readme-body-tab
+       # If some rules are not applicable, you can disable them
+       # using the --excluded-rules or --excluded-rule-ids option
+       - name: Validate package
+         run: meziantou.validate-nuget-package (Get-ChildItem "${{ env.NuGetDirectory }}/*.nupkg")
+         continue-on-error: true # Continue on Error
+
+
+  # Call Notify Discord.
+  # This will inform that new PR is available and needs approval for PROD
+  call_notify_discord:
+    if: github.event_name == 'Release'
+    needs: [ validate_nuget ]
+    uses: SkJonko/Centralized-Workflow-YAMLs/.github/workflows/helpers/notify-discord.yaml@main
+    with:
+      project_name: ${{ inputs.project_name }}
+    secrets:
+      DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+           
+      
+  # Call Deploy to NuGet.org
+  call_deploy:
+    if: github.event_name == 'Release'
+    needs: [ validate_nuget ]
+    uses: SkJonko/Centralized-Workflow-YAMLs/.github/workflows/helpers/deploy-nuget.yaml@main
+    with:
+      dotnet_version: ${{ inputs.dotnet_version }}
+    secrets:
+      NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
