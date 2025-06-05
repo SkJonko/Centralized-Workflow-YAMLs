@@ -1,0 +1,41 @@
+name: Deploy NuGet
+
+on:
+  workflow_call:
+    inputs:
+      dotnet_version:
+        required: true
+        type: string
+    secrets:
+      NUGET_APIKEY:
+        required: true
+
+env:
+  NuGetDirectory: ${{ github.workspace }}/nuget
+
+# Publish only when creating a GitHub Release
+# https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository
+# You can update this logic if you want to manage releases differently
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: Production
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: nuget
+          path: ${{ env.NuGetDirectory }}
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.dotnet_version }}
+
+      - name: Publish NuGet package
+        run: |
+          foreach($file in (Get-ChildItem "${{ env.NuGetDirectory }}" -Recurse -Include *.nupkg)) {
+              dotnet nuget push $file --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json
+          }
