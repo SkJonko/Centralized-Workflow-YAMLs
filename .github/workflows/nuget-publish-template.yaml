@@ -68,7 +68,7 @@ jobs:
 
   # Run Tests if needed
   call_run_test:
-    uses: SkJonko/Centralized-Workflow-YAMLs/.github/workflows/helpers/run-test.yaml@main
+    uses: SkJonko/Centralized-Workflow-YAMLs/.github/workflows/run-test.yaml@main
     with:
       run_test: ${{ inputs.run_test }}
 
@@ -108,7 +108,7 @@ jobs:
   call_notify_discord:
     if: github.event_name == 'Release'
     needs: [ validate_nuget ]
-    uses: SkJonko/Centralized-Workflow-YAMLs/.github/workflows/helpers/notify-discord.yaml@main
+    uses: SkJonko/Centralized-Workflow-YAMLs/.github/workflows/notify-discord.yaml@main
     with:
       project_name: ${{ inputs.project_name }}
     secrets:
@@ -119,7 +119,7 @@ jobs:
   call_deploy:
     if: github.event_name == 'Release'
     needs: [ validate_nuget ]
-    uses: SkJonko/Centralized-Workflow-YAMLs/.github/workflows/helpers/deploy-nuget.yaml@main
+    uses: SkJonko/Centralized-Workflow-YAMLs/.github/workflows/deploy-nuget.yaml@main
     with:
       dotnet_version: ${{ inputs.dotnet_version }}
     secrets:
