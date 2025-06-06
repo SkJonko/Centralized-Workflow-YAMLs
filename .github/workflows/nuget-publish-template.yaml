@@ -15,7 +15,7 @@ on:
         required: false
         type: string
         default: './'
-      run_test:
+      need_run_test:
         required: false
         type: boolean
         default: true
@@ -70,7 +70,7 @@ jobs:
   call_run_test:
     uses: SkJonko/Centralized-Workflow-YAMLs/.github/workflows/run-test.yaml@main
     with:
-      run_test: ${{ inputs.run_test }}
+      need_run_test: ${{ inputs.need_run_test }}
 
 
   # Validate the NuGet package
