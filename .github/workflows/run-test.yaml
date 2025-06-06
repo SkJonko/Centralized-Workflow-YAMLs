@@ -1,4 +1,4 @@
-name: Run Test ${{ inputs.run_test }}
+name: Run Tests
 
 on:
   workflow_call:
