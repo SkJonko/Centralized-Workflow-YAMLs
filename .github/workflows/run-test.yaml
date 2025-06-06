@@ -3,14 +3,14 @@ name: Run Tests
 on:
   workflow_call:
     inputs:
-      run_test:
+      need_run_test:
         required: false
         type: boolean
         default: true
 
-
+jobs:
   run_test:
-    if: ${{ inputs.run_test == true }}
+    if: ${{ inputs.need_run_test == true }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -46,7 +46,7 @@ on:
 
   # # Run tests
   # run_test:
-  #   if: ${{ inputs.run_test == true }}
+  #   if: ${{ inputs.need_run_test == true }}
   #   runs-on: ubuntu-latest
   #   steps:
   #   - uses: actions/checkout@v3
@@ -62,7 +62,7 @@ on:
 
 
   run_test_skipped:
-    if: ${{ inputs.run_test != true }}
+    if: ${{ inputs.need_run_test != true }}
     runs-on: ubuntu-latest
     outputs:
       test_status: success
