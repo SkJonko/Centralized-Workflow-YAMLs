@@ -29,7 +29,7 @@ The **nuget-publish-template.yaml** workflow is a reusable GitHub Actions templa
 | `project_name`   | string  | Yes      |             | Name of the project/package.                     |
 | `project_path`   | string  | No       | `./`        | Path to the project file or directory.           |
 | `dotnet_version` | string  | No       | `9.0.x`     | .NET SDK version to use for build and publish.   |
-| `run_test`       | boolean | No       | `true`      | Whether to run tests before packaging.           |
+| `need_run_test`       | boolean | No       | `true`      | Whether to run tests before packaging.           |
 
 ### Secrets
 
