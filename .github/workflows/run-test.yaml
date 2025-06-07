@@ -7,6 +7,10 @@ on:
         required: false
         type: boolean
         default: true
+      dotnet_version:
+        required: false
+        type: string
+        default: '9.0.x'
 
 jobs:
   run_test:
@@ -20,11 +24,22 @@ jobs:
       with:
         dotnet-version: ${{ inputs.dotnet_version }}
 
+    - name: Find Test Project
+      id: find_test_project
+      run: |
+        project_path=$(find . -type f -name '*Test.csproj' | head -n 1)
+        if [ -z "$project_path" ]; then
+          echo "❌ No *Test.csproj file found!"
+          exit 1
+        fi
+        echo "✅ Found test project: $project_path"
+        echo "project_path=$project_path" >> $GITHUB_OUTPUT
+
     - name: Install coverlet collector (if needed)
-      run: dotnet add ${{ inputs.project_path }} package coverlet.collector
+      run: dotnet add "${{ steps.find_test_project.outputs.project_path }}" package coverlet.collector
 
     - name: Run Tests with Coverage
-      run: dotnet test --configuration Release --collect:"XPlat Code Coverage"
+      run: dotnet test "${{ steps.find_test_project.outputs.project_path }}" --configuration Release --collect:"XPlat Code Coverage"
 
     - name: Convert coverage to lcov (optional, for prettier visualization)
       run: |
@@ -42,24 +57,6 @@ jobs:
       run: |
         echo "## Code Coverage Summary" >> $GITHUB_STEP_SUMMARY
         echo "[View Coverage Report](./coveragereport/index.html)" >> $GITHUB_STEP_SUMMARY
-
-
-  # # Run tests
-  # run_test:
-  #   if: ${{ inputs.need_run_test == true }}
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v3
-    
-  #   # Install .NET 9.0 SDK
-  #   - name: Setup .NET ${{ inputs.dotnet_version }}
-  #     uses: actions/setup-dotnet@v4
-  #     with:
-  #       dotnet-version: ${{ inputs.dotnet_version }} # Use a specific version or '9.0.x' for the latest 9.0 preview
-    
-  #   - name: Run Tests
-  #     run: dotnet test --configuration Release
-
 
   run_test_skipped:
     if: ${{ inputs.need_run_test != true }}
