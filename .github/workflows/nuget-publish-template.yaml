@@ -85,7 +85,7 @@ jobs:
   # This will inform that new PR is available and needs approval for PROD
   call_notify_discord:
     if: github.event_name == 'Release'
-    needs: [ validate_nuget ]
+    needs: [ call_validate_nuget ]
     uses: SkJonko/Centralized-Workflow-YAMLs/.github/workflows/notify-discord.yaml@main
     with:
       project_name: ${{ inputs.project_name }}
@@ -96,7 +96,7 @@ jobs:
   # Call Deploy to NuGet.org
   call_deploy:
     if: github.event_name == 'Release'
-    needs: [ validate_nuget ]
+    needs: [ call_validate_nuget ]
     uses: SkJonko/Centralized-Workflow-YAMLs/.github/workflows/deploy-nuget.yaml@main
     with:
       dotnet_version: ${{ inputs.dotnet_version }}
