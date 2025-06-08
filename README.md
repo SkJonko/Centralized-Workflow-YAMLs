@@ -1,26 +1,28 @@
-# NuGet Publish GitHub Actions Workflow Template
+# 📦 Centralized Workflow YAMLs
 
-This repository provides a reusable GitHub Actions workflow for building, testing, validating, and publishing .NET projects as NuGet packages. It is designed to be used as a template via `workflow_call` in other repositories.
+A centralized repo of reusable [GitHub Actions](https://docs.github.com/actions) workflows designed for:
 
-# Features
+- ✅ .NET NuGet publishing  
+- 🔄 CI/CD pipelines  
+- 📁 Central management of GitHub Actions logic across repositories
 
-- **Configurable .NET SDK version** (_default: 9.0.x_)
-- **Builds and packs** your .NET project into a NuGet package
-- **Runs tests** (_optional, enabled by default_)
-- **Validates** the generated NuGet package using [Meziantou NuGet Package Validator](https://www.nuget.org/packages/Meziantou.Framework.NuGetPackageValidation.Tool)
-- **Publishes artifacts** for downstream jobs
-- **Notifies via Discord** on release (_requires webhook_)
-- **Deploys to NuGet.org** on release (_requires API key_)
+---
 
-# Templates
+## 🛠️ Available Workflows
 
-## Workflow
+| Workflow Name                | Description                                               |
+|-----------------------------|-----------------------------------------------------------|
+| `nuget-publish-template.yaml` | Builds, tests, packs, and publishes .NET NuGet packages   |
+| `deploy-nuget.yaml`             | Deploys pre-built NuGet packages to nuget.org; meant to be called by other workflows. |
+| `notify-discord.yaml`           | Sends a notification to a Discord channel with your desired message. |
+| `run-tests.yaml`                | Discovers test projects, runs unit tests with code coverage, and uploads a coverage report. Supports skipping via input. |
+| `validate-nuget.yaml`           | Validates NuGet package metadata and structure using Meziantou's NuGet validation tool. |
 
+---
 **nuget-publish-template.yaml**
 
 The **nuget-publish-template.yaml** workflow is a reusable GitHub Actions template for automating the build, test, validation, and publication of .NET projects as NuGet packages. Designed to be invoked via workflow_call from other repositories, it streamlines the entire CI/CD process for .NET libraries.
 
-## Inputs and Secrets
 
 ### Inputs
 
@@ -40,84 +42,41 @@ The **nuget-publish-template.yaml** workflow is a reusable GitHub Actions templa
 
 ---
 
-### Helpers
+## ⬇️ How to Use
 
-<details>
-    <summary>deploy-nuget.yaml</summary>
+In your repository, create or update a workflow file like `.github/workflows/publish.yml`:
 
----
-The **deploy-nuget.yaml** workflow is designed to automate the final step of publishing your .NET package to NuGet.org. It is typically called from a parent workflow (_such as **nuget-publish-template.yaml**_) after the package has been built, tested, and validated.
+```yaml
+name: Publish NuGet Package
 
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*.*.*'
 
-### Inputs
-
-| Name             | Type   | Required | Default   | Description                      |
-|------------------|--------|----------|-----------|----------------------------------|
-| `dotnet_version` | string | No       | `9.0.x`   | .NET SDK version to use for publishing the package. |
-
-### Secrets
-
-| Name           | Required | Description                                 |
-|----------------|----------|---------------------------------------------|
-| `NUGET_APIKEY` | Yes      | API key for publishing to NuGet.org.        |
-
-**Example usage:**
-```
-  deploy:
-    uses: SkJonko/Centralized-Workflow-YAMLs/.github/workflows/helpers/deploy-nuget.yaml@main
+jobs:
+  publish:
+    uses: SkJonko/Centralized-Workflow-YAMLs/.github/workflows/nuget-publish-template.yml@main
     with:
-      dotnet_version: ${{ inputs.dotnet_version }}
+      solution: 'MyProject.sln'
+      need_run_test: true
     secrets:
       NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
-```
-
-</details>
-
-<details>
-    <summary>notify-discord.yaml</summary>
-
----
-The **notify-discord.yaml** workflow is designed to send automated notifications to a specified Discord channel via a webhook. It is typically used to inform your team about important events in your CI/CD pipeline, such as the release of a new NuGet package.
-
-### Inputs
-
-| Name           | Type   | Required | Description                        |
-|----------------|--------|----------|------------------------------------|
-| `project_name` | string | Yes      | Name of the project/package to include in the Discord notification. |
-
-### Secrets
-
-| Name             | Required | Description                        |
-|------------------|----------|------------------------------------|
-| `DISCORD_WEBHOOK`| Yes      | Discord webhook URL for sending notifications. |
-
-
-**Example usage:**
-```
-  notify_discord:
-    uses: SkJonko/Centralized-Workflow-YAMLs/.github/workflows/helpers/notify-discord.yaml@main
-    with:
-      project_name: ${{ inputs.project_name }}
-    secrets:
       DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
 ```
-    
-</details>
+
+> ✅ Note: Replace @main with a tag or commit SHA for version pinning (recommended for stability).
 
 
-## Workflow Overview
+# 🎯 Benefits
 
-1. **Create NuGet Package**: Checks out code, sets up .NET, builds, and packs the project.
-2. **Run Tests**: Optionally runs tests if enabled.
-3. **Validate Package**: Validates the NuGet package for best practices.
-4. **Notify Discord**: Sends a notification on release events.
-5. **Deploy to NuGet.org**: Publishes the package to NuGet.org on release.
+- Reusable, DRY GitHub Actions
+- Fast setup across multiple repos
+- Maintenance in one place
+- Supports secure and stable versioning
 
-## Requirements
+# 📚 Resources
 
-- Your repository must provide the required secrets.
-- The workflow expects a .NET project compatible with the specified SDK version.
-
-## Customization
-
-You can fork or reference this workflow and adjust steps as needed for your project structure or requirements.
+- [GitHub Reusable Workflows Documentation](https://docs.github.com/en/actions/sharing-automations/reusing-workflows)
+- [Including README in NuGet Packages](https://learn.microsoft.com/en-us/nuget/nuget-org/package-readme-on-nuget-org)
