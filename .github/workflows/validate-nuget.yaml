@@ -1,4 +1,4 @@
-name: Run Tests
+name: Validate Nuget
 
 on:
   workflow_call:
@@ -9,7 +9,7 @@ on:
         default: '9.0.x'
 
 jobs:
-  run_test:
+  validate_nuget:
      runs-on: ubuntu-latest
      steps:
     
