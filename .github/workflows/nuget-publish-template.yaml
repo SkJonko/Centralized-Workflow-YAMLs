@@ -76,7 +76,7 @@ jobs:
   # Validate the NuGet package
   call_validate_nuget:
      needs: [ create_nuget, call_run_test ]
-     uses: SkJonko/Centralized-Workflow-YAMLs/.github/workflows/validate-nuget.yaml
+     uses: SkJonko/Centralized-Workflow-YAMLs/.github/workflows/validate-nuget.yaml@main
      with:
        dotnet_version: ${{ inputs.dotnet_version }}
 
