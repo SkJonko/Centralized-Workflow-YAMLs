@@ -88,7 +88,7 @@ jobs:
     needs: [ call_validate_nuget ]
     uses: SkJonko/Centralized-Workflow-YAMLs/.github/workflows/notify-discord.yaml@main
     with:
-      project_name: ${{ inputs.project_name }}
+      message: A new release for ${{ inputs.project_name }} is awaiting approval before the NuGet package can be created. 🔗 [Click here to review and approve the action](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
     secrets:
       DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
            
