@@ -18,5 +18,5 @@ jobs:
         uses: rjstone/discord-webhook-notify@v1.0.4
         with:
           severity: info
-          details: A new pull request is awaiting approval to initiate the creation of a NuGet package for ${{ inputs.project_name }}.
+          details: A new release for ${{ inputs.project_name }} is awaiting approval before the NuGet package can be created. 🔗 [Click here to review and approve the action](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
           webhookurl: ${{ secrets.DISCORD_WEBHOOK }}
