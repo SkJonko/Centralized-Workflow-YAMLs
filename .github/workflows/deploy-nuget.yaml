@@ -1,4 +1,4 @@
-name: Deploy NuGet
+name: Deploy NuGet (pwsh)
 
 on:
   workflow_call:
@@ -9,6 +9,10 @@ on:
     secrets:
       NUGET_APIKEY:
         required: true
+        
+defaults:
+  run:
+    shell: pwsh
 
 env:
   NuGetDirectory: ${{ github.workspace }}/nuget
@@ -35,7 +39,6 @@ jobs:
           dotnet-version: ${{ inputs.dotnet_version }}
 
       - name: Publish NuGet package
-        shell: pwsh
         run: |
           foreach($file in (Get-ChildItem "${{ env.NuGetDirectory }}" -Recurse -Include *.nupkg)) {
               dotnet nuget push $file --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json
