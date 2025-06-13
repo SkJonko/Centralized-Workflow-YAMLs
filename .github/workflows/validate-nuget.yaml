@@ -12,6 +12,9 @@ defaults:
   run:
     shell: pwsh
 
+env:
+  NuGetDirectory: ${{ github.workspace }}/nuget
+
 jobs:
   validate_nuget:
      runs-on: ubuntu-latest
