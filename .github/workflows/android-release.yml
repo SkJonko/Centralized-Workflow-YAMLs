@@ -1,0 +1,108 @@
+name: Build Android Release
+
+on:
+  workflow_call:
+    inputs:
+      project_path:
+        required: true
+        type: string
+        default: 'src/myApp/myApp.csproj'
+      version_name:
+        description: 'Version name (e.g. 1.0.0)'
+        required: true
+        default: '1.0.0'
+      version_code:
+        description: 'Version code (integer — must be incremented for each release)'
+        required: true
+        default: '1'
+      release_title:
+        description: 'Release title'
+        required: true
+        default: 'MyApp Release'
+      dotnet_version:
+        required: false
+        type: string
+        default: '10.0.x'
+    secrets:
+      KEY_ALIAS:
+        required: true
+      KEY_PASSWORD:
+        required: true
+      KEYSTORE_PASSWORD:
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.0
+
+      - name: Setup .NET ${{ inputs.dotnet_version }}
+        uses: actions/setup-dotnet@v4.3.0
+        with:
+          dotnet-version: ${{ inputs.dotnet_version }}
+
+      - name: Install .NET MAUI Android workload
+        run: dotnet workload install maui-android
+
+      - name: Restore NuGet packages
+        run: dotnet restore ${{ inputs.project_path }} -p:TargetFramework=net10.0-android36.0
+
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > "${{ github.workspace }}/projectkeystore.keystore"
+
+      - name: Build signed APK
+        run: |
+          dotnet publish ${{ inputs.project_path }} \
+            -f net10.0-android36.0 \
+            -c Release \
+            -p:TargetFrameworks=net10.0-android36.0 \
+            -p:AndroidPackageFormat=apk \
+            -p:AndroidSigningKeyStore="${{ github.workspace }}/projectkeystore.keystore" \
+            -p:AndroidSigningKeyAlias="${{ secrets.KEY_ALIAS }}" \
+            -p:AndroidSigningKeyPass="${{ secrets.KEY_PASSWORD }}" \
+            -p:AndroidSigningStorePass="${{ secrets.KEYSTORE_PASSWORD }}" \
+            -p:ApplicationVersion="${{ inputs.version_code }}" \
+            -p:ApplicationDisplayVersion="${{ inputs.version_name }}"
+
+      - name: Build signed AAB
+        run: |
+          dotnet publish ${{ inputs.project_path }} \
+            -f net10.0-android36.0 \
+            -c Release \
+            -p:TargetFrameworks=net10.0-android36.0 \
+            -p:AndroidPackageFormat=aab \
+            -p:AndroidSigningKeyStore="${{ github.workspace }}/projectkeystore.keystore" \
+            -p:AndroidSigningKeyAlias="${{ secrets.KEY_ALIAS }}" \
+            -p:AndroidSigningKeyPass="${{ secrets.KEY_PASSWORD }}" \
+            -p:AndroidSigningStorePass="${{ secrets.KEYSTORE_PASSWORD }}" \
+            -p:ApplicationVersion="${{ inputs.version_code }}" \
+            -p:ApplicationDisplayVersion="${{ inputs.version_name }}"
+
+      - name: Find artifacts
+        id: find_artifacts
+        run: |
+          APK_PATH=$(find "${{ github.workspace }}" -name "*-Signed.apk" -not -path "*/obj/*" | head -1)
+          AAB_PATH=$(find "${{ github.workspace }}" -name "*.aab" -not -path "*/obj/*" | head -1)
+          echo "apk=$APK_PATH" >> $GITHUB_OUTPUT
+          echo "aab=$AAB_PATH" >> $GITHUB_OUTPUT
+          echo "Found APK: $APK_PATH"
+          echo "Found AAB: $AAB_PATH"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2.1.0
+        with:
+          tag_name: v${{ inputs.version_name }}
+          name: ${{ inputs.release_title }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            ${{ steps.find_artifacts.outputs.apk }}
+            ${{ steps.find_artifacts.outputs.aab }}
