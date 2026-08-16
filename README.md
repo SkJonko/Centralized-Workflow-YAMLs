@@ -59,7 +59,8 @@ jobs:
   publish:
     uses: SkJonko/Centralized-Workflow-YAMLs/.github/workflows/nuget-publish-template.yml@main
     with:
-      solution: 'MyProject.sln'
+      project_path: './MyProject.sln'
+      project_name: 'MyProject'
       need_run_test: true
     secrets:
       NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
