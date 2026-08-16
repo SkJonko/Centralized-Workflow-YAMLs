@@ -8,11 +8,9 @@ on:
         type: string
         default: 'src/myApp/myApp.csproj'
       version_name:
-        description: 'Version name (e.g. 1.0.0)'
         required: true
         default: '1.0.0'
       version_code:
-        description: 'Version code (integer — must be incremented for each release)'
         required: true
         default: '1'
       release_title:
