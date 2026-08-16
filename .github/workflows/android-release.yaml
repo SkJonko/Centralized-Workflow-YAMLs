@@ -9,13 +9,15 @@ on:
         default: 'src/myApp/myApp.csproj'
       version_name:
         required: true
+        type: string
         default: '1.0.0'
       version_code:
         required: true
+        type: string
         default: '1'
       release_title:
-        description: 'Release title'
         required: true
+        type: string
         default: 'MyApp Release'
       dotnet_version:
         required: false
