@@ -54,7 +54,7 @@ jobs:
 
       - name: Decode Keystore
         run: |
-          echo "Base64 Keystore: ${{ secrets.KEYSTORE_BASE64 }}"
+          echo "Decoding keystore from base64..."
           printf '%s' "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > myapp.keystore
 
           if [ ! -s myapp.keystore ]; then
@@ -62,7 +62,16 @@ jobs:
             exit 1
           fi
 
-          echo "Keystore decoded successfully."
+          # Verify keystore integrity
+          keytool -list -v -keystore myapp.keystore -storepass "${{ secrets.KEYSTORE_PASSWORD }}" -alias "${{ secrets.KEY_ALIAS }}" > /dev/null 2>&1
+          if [ $? -ne 0 ]; then
+            echo "ERROR: Keystore verification failed. Check your keystore credentials."
+            exit 1
+          fi
+
+          keystore_size=$(stat --format=%s myapp.keystore)
+          echo "✓ Keystore decoded successfully (size: $keystore_size bytes)"
+          echo "✓ Keystore verified - key alias and credentials are correct"
 
       - name: Set version variables
         run: |
