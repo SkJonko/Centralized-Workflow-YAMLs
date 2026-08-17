@@ -96,7 +96,8 @@ jobs:
             exit 1
           fi
           
-          echo "✓ Keystore file verified at: $(pwd)/myapp.keystore"
+          KEYSTORE_PATH="$(pwd)/myapp.keystore"
+          echo "✓ Keystore file verified at: $KEYSTORE_PATH"
           echo "✓ Keystore file size: $(stat --format=%s myapp.keystore) bytes"
           
           dotnet publish ${{ inputs.project_path }} \
@@ -107,7 +108,7 @@ jobs:
             -p:AndroidSigningKeyPass="${{ secrets.KEY_PASSWORD }}" \
             -p:AndroidSigningStorePass="${{ secrets.KEYSTORE_PASSWORD }}" \
             -p:ApplicationVersion="${VERSION_CODE}" \
-            -p:AndroidSigningStore="myapp.keystore" \
+            -p:AndroidSigningStore="$KEYSTORE_PATH" \
             -p:ApplicationDisplayVersion="${VERSION_DISPLAY}"
 
       - name: Find artifacts
