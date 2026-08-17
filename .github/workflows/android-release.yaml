@@ -67,10 +67,14 @@ jobs:
 
       - name: Set version variables
         run: |
-          buildNumber="${{ github.run_number }}"
+          buildNumber=${{ github.run_number }}
           version="${{ inputs.version_name }}"
 
           versionCode=$((10000 + buildNumber))
+
+          echo "Build Number: $buildNumber"
+          echo "Version: $version"
+          echo "Version Code: $versionCode"
 
           echo "VERSION_DISPLAY=${version}.${buildNumber}" >> "$GITHUB_ENV"
           echo "VERSION_CODE=${versionCode}" >> "$GITHUB_ENV"
