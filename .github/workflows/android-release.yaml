@@ -70,7 +70,9 @@ jobs:
           fi
 
           keystore_size=$(stat --format=%s myapp.keystore)
+          keystore_hash=$(sha256sum myapp.keystore | cut -d' ' -f1)
           echo "✓ Keystore decoded successfully (size: $keystore_size bytes)"
+          echo "✓ Keystore SHA256: $keystore_hash"
           echo "✓ Keystore verified - key alias and credentials are correct"
 
       - name: Set version variables
@@ -123,6 +125,19 @@ jobs:
             find "${{ github.workspace }}" -name "*.apk" -type f | head -10
             exit 1
           fi
+          
+          # Verify APK is signed
+          echo "Verifying APK signature..."
+          jarsigner -verify -verbose "$APK_PATH" > /tmp/signature_info.txt 2>&1
+          cat /tmp/signature_info.txt
+          
+          if ! grep -q "jar verified" /tmp/signature_info.txt; then
+            echo "⚠️ WARNING: APK signature verification failed or APK is not signed!"
+            exit 1
+          fi
+          
+          # Get APK hash for comparison
+          echo "APK SHA256: $(sha256sum "$APK_PATH")"
           
           echo "apk=$APK_PATH" >> $GITHUB_OUTPUT
           echo "aab=$AAB_PATH" >> $GITHUB_OUTPUT
