@@ -89,6 +89,16 @@ jobs:
 
       - name: Build signed APK
         run: |
+          # Verify keystore file exists
+          if [ ! -f myapp.keystore ]; then
+            echo "ERROR: Keystore file not found at myapp.keystore"
+            ls -la *.keystore 2>/dev/null || echo "No keystore files found in current directory"
+            exit 1
+          fi
+          
+          echo "✓ Keystore file verified at: $(pwd)/myapp.keystore"
+          echo "✓ Keystore file size: $(stat --format=%s myapp.keystore) bytes"
+          
           dotnet publish ${{ inputs.project_path }} \
             -f net10.0-android36.0 \
             -c Release \
@@ -97,7 +107,7 @@ jobs:
             -p:AndroidSigningKeyPass="${{ secrets.KEY_PASSWORD }}" \
             -p:AndroidSigningStorePass="${{ secrets.KEYSTORE_PASSWORD }}" \
             -p:ApplicationVersion="${VERSION_CODE}" \
-            -p:AndroidSigningStore="${{ github.workspace }}/myapp.keystore" \
+            -p:AndroidSigningStore="myapp.keystore" \
             -p:ApplicationDisplayVersion="${VERSION_DISPLAY}"
 
       - name: Find artifacts
@@ -105,10 +115,18 @@ jobs:
         run: |
           APK_PATH=$(find "${{ github.workspace }}" -name "*-Signed.apk" -not -path "*/obj/*" | head -1)
           AAB_PATH=$(find "${{ github.workspace }}" -name "*.aab" -not -path "*/obj/*" | head -1)
+          
+          if [ -z "$APK_PATH" ]; then
+            echo "ERROR: No signed APK found!"
+            echo "Looking for any APK files..."
+            find "${{ github.workspace }}" -name "*.apk" -type f | head -10
+            exit 1
+          fi
+          
           echo "apk=$APK_PATH" >> $GITHUB_OUTPUT
           echo "aab=$AAB_PATH" >> $GITHUB_OUTPUT
-          echo "Found APK: $APK_PATH"
-          echo "Found AAB: $AAB_PATH"
+          echo "✓ Found APK: $APK_PATH"
+          echo "✓ Found AAB: $AAB_PATH"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2.1.0
