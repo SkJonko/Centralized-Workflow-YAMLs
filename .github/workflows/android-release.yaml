@@ -67,8 +67,13 @@ jobs:
 
       - name: Set version variables
         run: |
-          echo "VERSION_DISPLAY=${{ inputs.version_name }}.${{ github.run_number }}" >> "$GITHUB_ENV"
-          echo "VERSION_CODE=$((10000 + ${{ github.run_number }}))" >> "$GITHUB_ENV"
+          buildNumber="${{ github.run_number }}"
+          version="${{ inputs.version_name }}"
+
+          versionCode=$((10000 + buildNumber))
+
+          echo "VERSION_DISPLAY=${version}.${buildNumber}" >> "$GITHUB_ENV"
+          echo "VERSION_CODE=${versionCode}" >> "$GITHUB_ENV"
 
       - name: Build signed APK
         run: |
