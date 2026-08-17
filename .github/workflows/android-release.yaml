@@ -88,9 +88,9 @@ jobs:
             -p:AndroidSigningKeyAlias="${{ secrets.KEY_ALIAS }}" \
             -p:AndroidSigningKeyPass="${{ secrets.KEY_PASSWORD }}" \
             -p:AndroidSigningStorePass="${{ secrets.KEYSTORE_PASSWORD }}" \
-            -p:ApplicationVersion="$env:VERSION_CODE" \
+            -p:ApplicationVersion="${VERSION_CODE}" \
             -p:AndroidSigningStore="${{ github.workspace }}/myapp.keystore" \
-            -p:ApplicationDisplayVersion="${{ inputs.version_name }}"
+            -p:ApplicationDisplayVersion="${VERSION_DISPLAY}"
 
       - name: Find artifacts
         id: find_artifacts
