@@ -30,6 +30,8 @@ on:
         required: true
       KEYSTORE_PASSWORD:
         required: true
+      KEYSTORE_BASE64:
+        required: true
 
 permissions:
   contents: write
@@ -53,9 +55,10 @@ jobs:
       - name: Restore NuGet packages
         run: dotnet restore ${{ inputs.project_path }} -p:TargetFramework=net10.0-android36.0
 
-      - name: Decode keystore
+      - name: Decode Keystore
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > "${{ github.workspace }}/projectkeystore.keystore"
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | Out-File -Encoding ascii -FilePath myapp.keystore.b64
+          certutil -decode myapp.keystore.b64 myapp.keystore
 
       - name: Build signed APK
         run: |
@@ -64,11 +67,11 @@ jobs:
             -c Release \
             -p:TargetFrameworks=net10.0-android36.0 \
             -p:AndroidPackageFormat=apk \
-            -p:AndroidSigningKeyStore="${{ github.workspace }}/projectkeystore.keystore" \
             -p:AndroidSigningKeyAlias="${{ secrets.KEY_ALIAS }}" \
             -p:AndroidSigningKeyPass="${{ secrets.KEY_PASSWORD }}" \
             -p:AndroidSigningStorePass="${{ secrets.KEYSTORE_PASSWORD }}" \
             -p:ApplicationVersion="${{ inputs.version_code }}" \
+            -p:AndroidSigningStore=myapp.keystore \
             -p:ApplicationDisplayVersion="${{ inputs.version_name }}"
 
       - name: Build signed AAB
@@ -78,11 +81,11 @@ jobs:
             -c Release \
             -p:TargetFrameworks=net10.0-android36.0 \
             -p:AndroidPackageFormat=aab \
-            -p:AndroidSigningKeyStore="${{ github.workspace }}/projectkeystore.keystore" \
             -p:AndroidSigningKeyAlias="${{ secrets.KEY_ALIAS }}" \
             -p:AndroidSigningKeyPass="${{ secrets.KEY_PASSWORD }}" \
             -p:AndroidSigningStorePass="${{ secrets.KEYSTORE_PASSWORD }}" \
             -p:ApplicationVersion="${{ inputs.version_code }}" \
+            -p:AndroidSigningStore=myapp.keystore \
             -p:ApplicationDisplayVersion="${{ inputs.version_name }}"
 
       - name: Find artifacts
