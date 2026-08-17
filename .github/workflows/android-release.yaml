@@ -8,13 +8,10 @@ on:
         type: string
         default: 'src/myApp/myApp.csproj'
       version_name:
+        description: 'Version name (e.g. 1.0) the last integer will be automatically incremented based on the pipeline build number'
         required: true
         type: string
-        default: '1.0.0'
-      version_code:
-        required: true
-        type: string
-        default: '1'
+        default: '1.0'
       release_title:
         required: true
         type: string
@@ -68,31 +65,23 @@ jobs:
 
           echo "Keystore decoded successfully."
 
+      - name: Set version variables
+        run: |
+          $buildNumber = "${{ github.run_number }}"
+          $version = "${{ inputs.version_name }}"
+          echo "VERSION_DISPLAY=$version.$buildNumber" >> $env:GITHUB_ENV
+          echo "VERSION_CODE=$((10000 + $buildNumber))" >> $env:GITHUB_ENV
+
       - name: Build signed APK
         run: |
           dotnet publish ${{ inputs.project_path }} \
             -f net10.0-android36.0 \
             -c Release \
             -p:TargetFrameworks=net10.0-android36.0 \
-            -p:AndroidPackageFormat=apk \
             -p:AndroidSigningKeyAlias="${{ secrets.KEY_ALIAS }}" \
             -p:AndroidSigningKeyPass="${{ secrets.KEY_PASSWORD }}" \
             -p:AndroidSigningStorePass="${{ secrets.KEYSTORE_PASSWORD }}" \
-            -p:ApplicationVersion="${{ inputs.version_code }}" \
-            -p:AndroidSigningStore="${{ github.workspace }}/myapp.keystore" \
-            -p:ApplicationDisplayVersion="${{ inputs.version_name }}"
-
-      - name: Build signed AAB
-        run: |
-          dotnet publish ${{ inputs.project_path }} \
-            -f net10.0-android36.0 \
-            -c Release \
-            -p:TargetFrameworks=net10.0-android36.0 \
-            -p:AndroidPackageFormat=aab \
-            -p:AndroidSigningKeyAlias="${{ secrets.KEY_ALIAS }}" \
-            -p:AndroidSigningKeyPass="${{ secrets.KEY_PASSWORD }}" \
-            -p:AndroidSigningStorePass="${{ secrets.KEYSTORE_PASSWORD }}" \
-            -p:ApplicationVersion="${{ inputs.version_code }}" \
+            -p:ApplicationVersion="$env:VERSION_CODE" \
             -p:AndroidSigningStore="${{ github.workspace }}/myapp.keystore" \
             -p:ApplicationDisplayVersion="${{ inputs.version_name }}"
 

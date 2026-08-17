@@ -113,9 +113,8 @@ jobs:
     uses: SkJonko/Centralized-Workflow-YAMLs/.github/workflows/android-release.yaml@main
     with:
       project_path: './src/MyApp/MyApp.csproj'
-      version_name: '1.0.0'
-      version_code: '1'
-      release_title: 'MyApp Android Release v1.0.0'
+      version_name: '1.0'
+      release_title: 'MyApp Android Release'
       dotnet_version: '10.0.x'
     secrets:
       KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
