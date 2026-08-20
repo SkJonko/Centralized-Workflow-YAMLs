@@ -16,6 +16,11 @@ on:
         required: true
         type: string
         default: 'MyApp Release'
+      create_github_release:
+        description: 'Whether to create a GitHub release'
+        required: false
+        type: boolean
+        default: true
       dotnet_version:
         required: false
         type: string
@@ -145,6 +150,7 @@ jobs:
           echo "✓ Found AAB: $AAB_PATH"
 
       - name: Create GitHub Release
+        if: inputs.create_github_release
         uses: softprops/action-gh-release@v2.1.0
         with:
           tag_name: v${{ env.VERSION_DISPLAY }}
