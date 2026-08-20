@@ -149,6 +149,16 @@ jobs:
           echo "✓ Found APK: $APK_PATH"
           echo "✓ Found AAB: $AAB_PATH"
 
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Android-${{ env.VERSION_DISPLAY }}
+          path: |
+            ${{ steps.find_artifacts.outputs.apk }}
+            ${{ steps.find_artifacts.outputs.aab }}
+          if-no-files-found: error
+          retention-days: 10
+
       - name: Create GitHub Release
         if: inputs.create_github_release
         uses: softprops/action-gh-release@v2.1.0
